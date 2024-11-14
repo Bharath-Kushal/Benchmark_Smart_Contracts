@@ -1,0 +1,2319 @@
+codes
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+// 1. Basic Arithmetic Safety
+contract SafeArithmetic {
+    function addNumbers(uint256 a, uint256 b) public pure returns (uint256) {
+        require(a <= type(uint256).max - b, "Addition overflow");
+        uint256 c = a + b;
+        assert(c >= a && c >= b);
+        return c;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 2. Safe Division
+contract SafeDivision {
+    function divide(uint256 numerator, uint256 denominator) public pure returns (uint256) {
+        require(denominator > 0, "Cannot divide by zero");
+        uint256 result = numerator / denominator;
+        assert(result * denominator <= numerator);
+        return result;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 3. Safe Array Access
+contract SafeArray {
+    uint256[] private numbers;
+    
+    function addNumber(uint256 num) public {
+        numbers.push(num);
+        assert(numbers.length > 0);
+    }
+    
+    function getNumber(uint256 index) public view returns (uint256) {
+        require(index < numbers.length, "Index out of bounds");
+        return numbers[index];
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 4. Safe Fund Transfer
+contract SafeTransfer {
+    mapping(address => uint256) private balances;
+    
+    function deposit() public payable {
+        require(msg.value > 0, "Must send funds");
+        require(balances[msg.sender] + msg.value >= balances[msg.sender], "Overflow check");
+        balances[msg.sender] += msg.value;
+        assert(balances[msg.sender] >= msg.value);
+    }
+    
+    function withdraw(uint256 amount) public {
+        require(amount <= balances[msg.sender], "Insufficient funds");
+        balances[msg.sender] -= amount;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        assert(balances[msg.sender] <= balances[msg.sender] + amount);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 5. Safe State Transitions
+contract SafeStateMachine {
+    enum State { Created, Active, Paused, Ended }
+    State public currentState;
+    
+    function transition(State newState) public {
+        require(isValidTransition(currentState, newState), "Invalid state transition");
+        currentState = newState;
+        assert(currentState == newState);
+    }
+    
+    function isValidTransition(State from, State to) internal pure returns (bool) {
+        if (from == State.Created) return to == State.Active;
+        if (from == State.Active) return to == State.Paused || to == State.Ended;
+        if (from == State.Paused) return to == State.Active || to == State.Ended;
+        return false;
+    }
+}
+
+// Continue with more good contracts...
+// (Note: I'll continue with more examples in subsequent messages to make this more manageable)
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 6. Safe Counter
+contract SafeCounter {
+    uint256 private counter;
+    
+    function increment() public {
+        require(counter < type(uint256).max, "Counter overflow");
+        counter++;
+        assert(counter > 0);
+    }
+    
+    function decrement() public {
+        require(counter > 0, "Counter underflow");
+        counter--;
+        assert(counter < type(uint256).max);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 7. Safe Token Balance
+contract SafeToken {
+    mapping(address => uint256) private balances;
+    uint256 private totalSupply;
+    
+    function mint(address to, uint256 amount) public {
+        require(amount > 0, "Amount must be positive");
+        require(totalSupply + amount >= totalSupply, "Total supply overflow");
+        require(balances[to] + amount >= balances[to], "Balance overflow");
+        
+        totalSupply += amount;
+        balances[to] += amount;
+        
+        assert(balances[to] >= amount);
+        assert(totalSupply >= amount);
+    }
+    
+    function transfer(address to, uint256 amount) public {
+        require(to != address(0), "Invalid recipient");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+        
+        assert(balances[to] >= amount);
+        assert(balances[msg.sender] <= type(uint256).max);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 8. Safe Auction
+contract SafeAuction {
+    uint256 public highestBid;
+    address public highestBidder;
+    
+    function bid() public payable {
+        require(msg.value > highestBid, "Bid too low");
+        require(msg.value > 0, "Zero bid not allowed");
+        
+        address previousBidder = highestBidder;
+        uint256 previousBid = highestBid;
+        
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+        
+        if (previousBidder != address(0)) {
+            payable(previousBidder).transfer(previousBid);
+        }
+        
+        assert(highestBid > previousBid);
+        assert(highestBidder == msg.sender);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 9. Safe Math Library
+contract SafeMathLib {
+    function multiply(uint256 a, uint256 b) public pure returns (uint256) {
+        if (a == 0) return 0;
+        require(a <= type(uint256).max / b, "Multiplication overflow");
+        uint256 c = a * b;
+        assert(c / a == b);
+        return c;
+    }
+    
+    function subtract(uint256 a, uint256 b) public pure returns (uint256) {
+        require(b <= a, "Subtraction underflow");
+        uint256 c = a - b;
+        assert(c <= a);
+        return c;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 10. Safe Time Lock
+contract SafeTimeLock {
+    uint256 public lockTime;
+    uint256 public constant MINIMUM_DELAY = 1 days;
+    uint256 public constant MAXIMUM_DELAY = 30 days;
+    
+    function setLockTime(uint256 newLockTime) public {
+        require(newLockTime >= MINIMUM_DELAY, "Lock time too short");
+        require(newLockTime <= MAXIMUM_DELAY, "Lock time too long");
+        
+        lockTime = newLockTime;
+        
+        assert(lockTime >= MINIMUM_DELAY);
+        assert(lockTime <= MAXIMUM_DELAY);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 11. Safe Voting System
+contract SafeVoting {
+    mapping(address => bool) public hasVoted;
+    mapping(uint256 => uint256) public voteCounts;
+    uint256 public totalVotes;
+    
+    function vote(uint256 proposalId) public {
+        require(!hasVoted[msg.sender], "Already voted");
+        require(proposalId < 5, "Invalid proposal");
+        
+        hasVoted[msg.sender] = true;
+        voteCounts[proposalId]++;
+        totalVotes++;
+        
+        assert(totalVotes > 0);
+        assert(voteCounts[proposalId] > 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 12. Safe Escrow
+contract SafeEscrow {
+    address public buyer;
+    address public seller;
+    uint256 public amount;
+    bool public funded;
+    bool public released;
+    
+    constructor(address _seller) {
+        buyer = msg.sender;
+        seller = _seller;
+        require(seller != address(0), "Invalid seller");
+        assert(buyer != seller);
+    }
+    
+    function fund() public payable {
+        require(msg.sender == buyer, "Only buyer can fund");
+        require(!funded, "Already funded");
+        require(msg.value > 0, "Amount must be positive");
+        
+        amount = msg.value;
+        funded = true;
+        
+        assert(address(this).balance >= amount);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 13. Safe Staking Contract
+contract SafeStaking {
+    mapping(address => uint256) public stakes;
+    uint256 public totalStaked;
+    
+    function stake() public payable {
+        require(msg.value > 0, "Must stake something");
+        require(stakes[msg.sender] + msg.value >= stakes[msg.sender], "Overflow check");
+        
+        stakes[msg.sender] += msg.value;
+        totalStaked += msg.value;
+        
+        assert(totalStaked >= msg.value);
+        assert(stakes[msg.sender] > 0);
+    }
+    
+    function withdraw() public {
+        uint256 amount = stakes[msg.sender];
+        require(amount > 0, "Nothing to withdraw");
+        
+        stakes[msg.sender] = 0;
+        totalStaked -= amount;
+        
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        
+        assert(stakes[msg.sender] == 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 14. Safe Rate Limiting
+contract SafeRateLimiter {
+    mapping(address => uint256) public lastActionTime;
+    uint256 public constant COOLDOWN = 1 hours;
+    
+    function performAction() public {
+        require(block.timestamp >= lastActionTime[msg.sender] + COOLDOWN, "Too soon");
+        lastActionTime[msg.sender] = block.timestamp;
+        assert(lastActionTime[msg.sender] <= block.timestamp);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 15. Safe Batch Transfer
+contract SafeBatchTransfer {
+    mapping(address => uint256) public balances;
+    
+    function batchTransfer(address[] memory recipients, uint256[] memory amounts) public {
+        require(recipients.length == amounts.length, "Length mismatch");
+        require(recipients.length > 0, "Empty batch");
+        
+        uint256 totalAmount = 0;
+        for(uint256 i = 0; i < amounts.length; i++) {
+            require(totalAmount + amounts[i] >= totalAmount, "Overflow check");
+            totalAmount += amounts[i];
+        }
+        
+        require(balances[msg.sender] >= totalAmount, "Insufficient balance");
+        
+        for(uint256 i = 0; i < recipients.length; i++) {
+            require(recipients[i] != address(0), "Invalid recipient");
+            balances[msg.sender] -= amounts[i];
+            balances[recipients[i]] += amounts[i];
+        }
+        
+        assert(balances[msg.sender] <= type(uint256).max);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 16. Safe Pausable Contract
+contract SafePausable {
+    bool public paused;
+    address public admin;
+    
+    constructor() {
+        admin = msg.sender;
+    }
+    
+    modifier whenNotPaused() {
+        require(!paused, "Contract is paused");
+        _;
+    }
+    
+    function setPaused(bool _paused) public {
+        require(msg.sender == admin, "Only admin");
+        paused = _paused;
+        assert(paused == _paused);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 17. Safe Whitelist
+contract SafeWhitelist {
+    mapping(address => bool) public whitelist;
+    uint256 public whitelistedCount;
+    
+    function addToWhitelist(address account) public {
+        require(account != address(0), "Invalid address");
+        require(!whitelist[account], "Already whitelisted");
+        
+        whitelist[account] = true;
+        whitelistedCount++;
+        
+        assert(whitelist[account]);
+        assert(whitelistedCount > 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 18. Safe Price Oracle
+contract SafePriceOracle {
+    uint256 public price;
+    uint256 public lastUpdateTime;
+    uint256 public constant MAX_PRICE = 1000000 ether;
+    uint256 public constant MIN_UPDATE_INTERVAL = 1 hours;
+    
+    function updatePrice(uint256 newPrice) public {
+        require(newPrice > 0 && newPrice <= MAX_PRICE, "Invalid price");
+        require(block.timestamp >= lastUpdateTime + MIN_UPDATE_INTERVAL, "Too soon");
+        
+        price = newPrice;
+        lastUpdateTime = block.timestamp;
+        
+        assert(price <= MAX_PRICE);
+        assert(price > 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 19. Safe Lottery
+contract SafeLottery {
+    mapping(address => bool) public hasTicket;
+    address[] public players;
+    uint256 public ticketPrice;
+    uint256 public maxPlayers;
+    
+    constructor(uint256 _ticketPrice, uint256 _maxPlayers) {
+        require(_ticketPrice > 0, "Invalid ticket price");
+        require(_maxPlayers > 1, "Need multiple players");
+        
+        ticketPrice = _ticketPrice;
+        maxPlayers = _maxPlayers;
+    }
+    
+    function buyTicket() public payable {
+        require(msg.value == ticketPrice, "Incorrect payment");
+        require(!hasTicket[msg.sender], "Already has ticket");
+        require(players.length < maxPlayers, "Lottery full");
+        
+        hasTicket[msg.sender] = true;
+        players.push(msg.sender);
+        
+        assert(players.length <= maxPlayers);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 20. Safe Time-Weighted Balance
+contract SafeTimeWeightedBalance {
+    struct Checkpoint {
+        uint256 timestamp;
+        uint256 balance;
+    }
+    
+    mapping(address => Checkpoint[]) public checkpoints;
+    
+    function updateBalance(address account, uint256 newBalance) public {
+        require(newBalance <= type(uint256).max, "Balance too high");
+        
+        Checkpoint[] storage userCheckpoints = checkpoints[account];
+        userCheckpoints.push(Checkpoint({
+            timestamp: block.timestamp,
+            balance: newBalance
+        }));
+        
+        assert(userCheckpoints.length > 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 21. Safe Token Vesting
+contract SafeTokenVesting {
+    mapping(address => uint256) public vestedAmount;
+    mapping(address => uint256) public vestingEnd;
+    
+    function createVesting(address beneficiary, uint256 amount, uint256 duration) public {
+        require(beneficiary != address(0), "Invalid beneficiary");
+        require(amount > 0, "Amount must be positive");
+        require(duration > 0, "Duration must be positive");
+        
+        uint256 end = block.timestamp + duration;
+        require(end > block.timestamp, "Overflow check");
+        
+        vestedAmount[beneficiary] = amount;
+        vestingEnd[beneficiary] = end;
+        
+        assert(vestingEnd[beneficiary] > block.timestamp);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 22. Safe Multi-Signature Wallet
+contract SafeMultiSig {
+    mapping(address => bool) public isOwner;
+    uint256 public required;
+    uint256 public ownerCount;
+    
+    function addOwner(address owner) public {
+        require(owner != address(0), "Invalid owner");
+        require(!isOwner[owner], "Already owner");
+        require(ownerCount + 1 > ownerCount, "Overflow check");
+        
+        isOwner[owner] = true;
+        ownerCount++;
+        
+        assert(ownerCount > 0);
+        assert(isOwner[owner]);
+    }
+}
+
+// Continue with more safe contracts...
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 23. Safe Liquidity Pool
+contract SafeLiquidityPool {
+    mapping(address => uint256) public balances;
+    uint256 public totalLiquidity;
+    
+    function addLiquidity() public payable {
+        require(msg.value > 0, "Zero liquidity");
+        require(balances[msg.sender] + msg.value >= balances[msg.sender], "Overflow check");
+        require(totalLiquidity + msg.value >= totalLiquidity, "Total overflow check");
+        
+        balances[msg.sender] += msg.value;
+        totalLiquidity += msg.value;
+        
+        assert(totalLiquidity >= msg.value);
+        assert(balances[msg.sender] >= msg.value);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 24. Safe Subscription Service
+contract SafeSubscription {
+    struct Subscription {
+        uint256 startTime;
+        uint256 endTime;
+        bool active;
+    }
+    
+    mapping(address => Subscription) public subscriptions;
+    uint256 public constant SUBSCRIPTION_DURATION = 30 days;
+    
+    function subscribe() public payable {
+        require(msg.value == 0.1 ether, "Incorrect payment");
+        require(!subscriptions[msg.sender].active, "Already subscribed");
+        
+        uint256 endTime = block.timestamp + SUBSCRIPTION_DURATION;
+        require(endTime > block.timestamp, "Time overflow");
+        
+        subscriptions[msg.sender] = Subscription({
+            startTime: block.timestamp,
+            endTime: endTime,
+            active: true
+        });
+        
+        assert(subscriptions[msg.sender].active);
+        assert(subscriptions[msg.sender].endTime > block.timestamp);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 25. Safe Reward Distribution
+contract SafeRewardDistribution {
+    mapping(address => uint256) public rewards;
+    uint256 public totalRewards;
+    
+    function distributeReward(address user, uint256 amount) public {
+        require(user != address(0), "Invalid user");
+        require(amount > 0, "Zero reward");
+        require(rewards[user] + amount >= rewards[user], "Reward overflow");
+        require(totalRewards + amount >= totalRewards, "Total overflow");
+        
+        rewards[user] += amount;
+        totalRewards += amount;
+        
+        assert(rewards[user] >= amount);
+        assert(totalRewards >= amount);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 26. Safe Time Lock Vault
+contract SafeTimeLockVault {
+    struct Lock {
+        uint256 amount;
+        uint256 unlockTime;
+    }
+    
+    mapping(address => Lock) public locks;
+    
+    function createLock(uint256 unlockTime) public payable {
+        require(msg.value > 0, "Zero amount");
+        require(unlockTime > block.timestamp, "Past unlock time");
+        require(locks[msg.sender].amount == 0, "Lock exists");
+        
+        locks[msg.sender] = Lock({
+            amount: msg.value,
+            unlockTime: unlockTime
+        });
+        
+        assert(locks[msg.sender].amount == msg.value);
+        assert(locks[msg.sender].unlockTime > block.timestamp);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 27. Safe Rate Limited Minter
+contract SafeRateLimitedMinter {
+    mapping(address => uint256) public lastMintTime;
+    mapping(address => uint256) public mintCount;
+    uint256 public constant MINT_COOLDOWN = 1 days;
+    uint256 public constant MAX_MINTS_PER_DAY = 5;
+    
+    function mint() public {
+        require(block.timestamp >= lastMintTime[msg.sender] + MINT_COOLDOWN || 
+                mintCount[msg.sender] < MAX_MINTS_PER_DAY, "Rate limit exceeded");
+        
+        if (block.timestamp >= lastMintTime[msg.sender] + MINT_COOLDOWN) {
+            mintCount[msg.sender] = 1;
+        } else {
+            mintCount[msg.sender]++;
+        }
+        
+        lastMintTime[msg.sender] = block.timestamp;
+        
+        assert(mintCount[msg.sender] <= MAX_MINTS_PER_DAY);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 28. Safe Batch Processing
+contract SafeBatchProcessor {
+    uint256[] public processedItems;
+    uint256 public constant MAX_BATCH_SIZE = 100;
+    
+    function processBatch(uint256[] memory items) public {
+        require(items.length > 0, "Empty batch");
+        require(items.length <= MAX_BATCH_SIZE, "Batch too large");
+        require(processedItems.length + items.length >= processedItems.length, "Overflow check");
+        
+        for(uint256 i = 0; i < items.length; i++) {
+            processedItems.push(items[i]);
+        }
+        
+        assert(processedItems.length >= items.length);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 29. Safe Merkle Proof Verifier
+contract SafeMerkleProof {
+    bytes32 public merkleRoot;
+    
+    function verifyProof(bytes32[] memory proof, bytes32 leaf) public view returns (bool) {
+        require(proof.length > 0, "Empty proof");
+        require(merkleRoot != bytes32(0), "Root not set");
+        
+        bytes32 computedHash = leaf;
+        
+        for (uint256 i = 0; i < proof.length; i++) {
+            bytes32 proofElement = proof[i];
+            
+            if (computedHash <= proofElement) {
+                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+            } else {
+                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+            }
+        }
+        
+        assert(computedHash != bytes32(0));
+        return computedHash == merkleRoot;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 30. Safe Upgradeable Storage
+contract SafeUpgradeableStorage {
+    mapping(bytes32 => uint256) private stores;
+    mapping(bytes32 => bool) public initialized;
+    
+    function initializeStore(bytes32 key) public {
+        require(!initialized[key], "Already initialized");
+        require(key != bytes32(0), "Invalid key");
+        
+        initialized[key] = true;
+        stores[key] = 0;
+        
+        assert(initialized[key]);
+        assert(stores[key] == 0);
+    }
+    
+    function setValue(bytes32 key, uint256 value) public {
+        require(initialized[key], "Not initialized");
+        stores[key] = value;
+        assert(stores[key] == value);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 31. Safe Priority Queue
+contract SafePriorityQueue {
+    struct QueueItem {
+        uint256 priority;
+        uint256 value;
+    }
+    
+    QueueItem[] public queue;
+    uint256 public constant MAX_QUEUE_SIZE = 1000;
+    
+    function enqueue(uint256 priority, uint256 value) public {
+        require(queue.length < MAX_QUEUE_SIZE, "Queue full");
+        
+        queue.push(QueueItem({
+            priority: priority,
+            value: value
+        }));
+        
+        uint256 position = queue.length - 1;
+        while (position > 0 && queue[position].priority < queue[(position - 1) / 2].priority) {
+            QueueItem memory temp = queue[position];
+            queue[position] = queue[(position - 1) / 2];
+            queue[(position - 1) / 2] = temp;
+            position = (position - 1) / 2;
+        }
+        
+        assert(queue.length <= MAX_QUEUE_SIZE);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 32. Safe Token Bridge
+contract SafeTokenBridge {
+    mapping(bytes32 => bool) public processedTransfers;
+    mapping(address => uint256) public balances;
+    
+    function bridgeTransfer(bytes32 transferId, address recipient, uint256 amount) public {
+        require(!processedTransfers[transferId], "Already processed");
+        require(recipient != address(0), "Invalid recipient");
+        require(amount > 0, "Zero amount");
+        require(balances[recipient] + amount >= balances[recipient], "Overflow check");
+        
+        processedTransfers[transferId] = true;
+        balances[recipient] += amount;
+        
+        assert(processedTransfers[transferId]);
+        assert(balances[recipient] >= amount);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 33. Safe Role Manager
+contract SafeRoleManager {
+    mapping(bytes32 => mapping(address => bool)) public roles;
+    mapping(bytes32 => uint256) public roleCount;
+    
+    function grantRole(bytes32 role, address account) public {
+        require(account != address(0), "Invalid account");
+        require(!roles[role][account], "Role already granted");
+        require(roleCount[role] + 1 > roleCount[role], "Role count overflow");
+        
+        roles[role][account] = true;
+        roleCount[role]++;
+        
+        assert(roles[role][account]);
+        assert(roleCount[role] > 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 34. Safe Voting Power
+contract SafeVotingPower {
+    mapping(address => uint256) public votingPower;
+    uint256 public totalVotingPower;
+    
+    function delegateVotingPower(address to, uint256 amount) public {
+        require(to != address(0), "Invalid delegate");
+        require(amount <= votingPower[msg.sender], "Insufficient power");
+        require(votingPower[to] + amount >= votingPower[to], "Power overflow");
+        
+        votingPower[msg.sender] -= amount;
+        votingPower[to] += amount;
+        
+        assert(votingPower[to] >= amount);
+        assert(votingPower[msg.sender] <= type(uint256).max);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 35. Safe Time-Weighted Average Price
+contract SafeTWAP {
+    struct Observation {
+        uint256 timestamp;
+        uint256 price;
+        uint256 weight;
+    }
+    
+    Observation[] public observations;
+    uint256 public constant MAX_OBSERVATIONS = 24;
+    
+    function addObservation(uint256 price, uint256 weight) public {
+        require(price > 0, "Invalid price");
+        require(weight > 0, "Invalid weight");
+        require(observations.length < MAX_OBSERVATIONS, "Too many observations");
+        
+        observations.push(Observation({
+            timestamp: block.timestamp,
+            price: price,
+            weight: weight
+        }));
+        
+        assert(observations.length <= MAX_OBSERVATIONS);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 36. Safe NFT Royalty
+contract SafeNFTRoyalty {
+    mapping(uint256 => address) public creators;
+    mapping(uint256 => uint256) public royaltyPercentage;
+    uint256 public constant MAX_ROYALTY = 10; // 10%
+    
+    function setRoyalty(uint256 tokenId, uint256 percentage) public {
+        require(creators[tokenId] == msg.sender, "Not creator");
+        require(percentage <= MAX_ROYALTY, "Royalty too high");
+        
+        royaltyPercentage[tokenId] = percentage;
+        
+        assert(royaltyPercentage[tokenId] <= MAX_ROYALTY);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 37. Safe Stake Lock
+contract SafeStakeLock {
+    struct StakeLock {
+        uint256 amount;
+        uint256 unlockTime;
+        bool exists;
+    }
+    
+    mapping(address => StakeLock) public stakeLocks;
+    
+    function createStakeLock(uint256 duration) public payable {
+        require(msg.value > 0, "Zero stake");
+        require(!stakeLocks[msg.sender].exists, "Lock exists");
+        require(duration > 0, "Zero duration");
+        
+        uint256 unlockTime = block.timestamp + duration;
+        require(unlockTime > block.timestamp, "Time overflow");
+        
+        stakeLocks[msg.sender] = StakeLock({
+            amount: msg.value,
+            unlockTime: unlockTime,
+            exists: true
+        });
+        
+        assert(stakeLocks[msg.sender].exists);
+        assert(stakeLocks[msg.sender].amount == msg.value);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 38. Safe Batch Token Transfer
+contract SafeBatchTokenTransfer {
+    mapping(address => uint256) public balances;
+    
+    function batchTransfer(
+        address[] memory recipients,
+        uint256[] memory amounts
+    ) public {
+        require(recipients.length == amounts.length, "Length mismatch");
+        require(recipients.length > 0, "Empty batch");
+        
+        uint256 totalAmount = 0;
+        for(uint256 i = 0; i < amounts.length; i++) {
+            require(totalAmount + amounts[i] >= totalAmount, "Amount overflow");
+            totalAmount += amounts[i];
+        }
+        
+        require(balances[msg.sender] >= totalAmount, "Insufficient balance");
+        
+        for(uint256 i = 0; i < recipients.length; i++) {
+            require(recipients[i] != address(0), "Invalid recipient");
+            
+            balances[msg.sender] -= amounts[i];
+            balances[recipients[i]] += amounts[i];
+        }
+        
+        assert(balances[msg.sender] <= type(uint256).max);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 39. Safe Token Burning
+contract SafeTokenBurning {
+    mapping(address => uint256) public balances;
+    uint256 public totalSupply;
+    
+    function burn(uint256 amount) public {
+        require(amount > 0, "Zero amount");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        require(totalSupply >= amount, "Supply underflow");
+        
+        balances[msg.sender] -= amount;
+        totalSupply -= amount;
+        
+        assert(totalSupply <= type(uint256).max);
+        assert(balances[msg.sender] <= type(uint256).max);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 40. Safe Governance Weight
+contract SafeGovernanceWeight {
+    mapping(address => uint256) public weights;
+    uint256 public totalWeight;
+    
+    function updateWeight(address account, uint256 newWeight) public {
+        require(account != address(0), "Invalid account");
+        
+        uint256 oldWeight = weights[account];
+        require(totalWeight >= oldWeight, "Total underflow");
+        totalWeight -= oldWeight;
+        
+        require(totalWeight + newWeight >= totalWeight, "Total overflow");
+        totalWeight += newWeight;
+        weights[account] = newWeight;
+        
+        assert(totalWeight >= newWeight);
+        assert(weights[account] == newWeight);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 41. Safe Collateral Manager
+contract SafeCollateralManager {
+    struct Collateral {
+        uint256 amount;
+        uint256 lastUpdateTime;
+        uint256 minimumCollateralRatio;
+    }
+    
+    mapping(address => Collateral) public collaterals;
+    
+    function addCollateral(uint256 minimumRatio) public payable {
+        require(msg.value > 0, "Zero collateral");
+        require(minimumRatio >= 150, "Ratio too low"); // 150% minimum
+        require(collaterals[msg.sender].amount + msg.value >= collaterals[msg.sender].amount, "Overflow check");
+        
+        collaterals[msg.sender].amount += msg.value;
+        collaterals[msg.sender].lastUpdateTime = block.timestamp;
+        collaterals[msg.sender].minimumCollateralRatio = minimumRatio;
+        
+        assert(collaterals[msg.sender].amount >= msg.value);
+        assert(collaterals[msg.sender].minimumCollateralRatio >= 150);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 42. Safe Auction House
+contract SafeAuctionHouse {
+    struct Auction {
+        uint256 highestBid;
+        address highestBidder;
+        uint256 endTime;
+        bool ended;
+    }
+    
+    mapping(uint256 => Auction) public auctions;
+    
+    function createAuction(uint256 auctionId, uint256 duration) public {
+        require(duration >= 1 hours, "Duration too short");
+        require(!auctions[auctionId].ended, "Auction exists");
+        
+        uint256 endTime = block.timestamp + duration;
+        require(endTime > block.timestamp, "Time overflow");
+        
+        auctions[auctionId].endTime = endTime;
+        
+        assert(auctions[auctionId].endTime > block.timestamp);
+        assert(!auctions[auctionId].ended);
+    }
+    
+    function placeBid(uint256 auctionId) public payable {
+        Auction storage auction = auctions[auctionId];
+        require(!auction.ended, "Auction ended");
+        require(block.timestamp < auction.endTime, "Auction expired");
+        require(msg.value > auction.highestBid, "Bid too low");
+        
+        if (auction.highestBidder != address(0)) {
+            payable(auction.highestBidder).transfer(auction.highestBid);
+        }
+        
+        auction.highestBid = msg.value;
+        auction.highestBidder = msg.sender;
+        
+        assert(auction.highestBid == msg.value);
+        assert(auction.highestBidder == msg.sender);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 43. Safe Linear Vesting
+contract SafeLinearVesting {
+    struct VestingSchedule {
+        uint256 totalAmount;
+        uint256 startTime;
+        uint256 duration;
+        uint256 released;
+        bool initialized;
+    }
+    
+    mapping(address => VestingSchedule) public vestingSchedules;
+    
+    function createVestingSchedule(
+        address beneficiary,
+        uint256 amount,
+        uint256 duration
+    ) public {
+        require(beneficiary != address(0), "Invalid beneficiary");
+        require(amount > 0, "Zero amount");
+        require(duration > 0, "Zero duration");
+        require(!vestingSchedules[beneficiary].initialized, "Already initialized");
+        
+        vestingSchedules[beneficiary] = VestingSchedule({
+            totalAmount: amount,
+            startTime: block.timestamp,
+            duration: duration,
+            released: 0,
+            initialized: true
+        });
+        
+        assert(vestingSchedules[beneficiary].initialized);
+        assert(vestingSchedules[beneficiary].totalAmount == amount);
+    }
+    
+    function releasable(address beneficiary) public view returns (uint256) {
+        VestingSchedule storage schedule = vestingSchedules[beneficiary];
+        require(schedule.initialized, "Not initialized");
+        
+        if (block.timestamp >= schedule.startTime + schedule.duration) {
+            return schedule.totalAmount - schedule.released;
+        }
+        
+        uint256 timeElapsed = block.timestamp - schedule.startTime;
+        uint256 vestedAmount = (schedule.totalAmount * timeElapsed) / schedule.duration;
+        return vestedAmount - schedule.released;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 44. Safe Bond Token
+contract SafeBondToken {
+    struct Bond {
+        uint256 principal;
+        uint256 maturityTime;
+        uint256 interestRate;
+        bool redeemed;
+    }
+    
+    mapping(uint256 => Bond) public bonds;
+    uint256 public nextBondId;
+    
+    function issueBond(uint256 interestRate, uint256 duration) public payable {
+        require(msg.value > 0, "Zero principal");
+        require(interestRate > 0 && interestRate <= 1000, "Invalid rate"); // max 10%
+        require(duration >= 30 days, "Duration too short");
+        
+        uint256 maturityTime = block.timestamp + duration;
+        require(maturityTime > block.timestamp, "Time overflow");
+        
+        bonds[nextBondId] = Bond({
+            principal: msg.value,
+            maturityTime: maturityTime,
+            interestRate: interestRate,
+            redeemed: false
+        });
+        
+        nextBondId++;
+        
+        assert(bonds[nextBondId - 1].principal == msg.value);
+        assert(!bonds[nextBondId - 1].redeemed);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 45. Safe Governance Token
+contract SafeGovernanceToken {
+    mapping(address => uint256) public balances;
+    mapping(address => mapping(address => uint256)) public delegatedPower;
+    mapping(address => uint256) public totalDelegatedPower;
+    
+    function delegate(address to, uint256 amount) public {
+        require(to != address(0), "Invalid delegate");
+        require(amount <= balances[msg.sender], "Insufficient balance");
+        require(totalDelegatedPower[to] + amount >= totalDelegatedPower[to], "Power overflow");
+        
+        delegatedPower[msg.sender][to] += amount;
+        totalDelegatedPower[to] += amount;
+        
+        assert(delegatedPower[msg.sender][to] <= balances[msg.sender]);
+        assert(totalDelegatedPower[to] >= amount);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 46. Safe Liquidity Mining
+contract SafeLiquidityMining {
+    struct UserInfo {
+        uint256 stakedAmount;
+        uint256 rewardDebt;
+        uint256 lastUpdateTime;
+    }
+    
+    mapping(address => UserInfo) public userInfo;
+    uint256 public rewardRate;
+    uint256 public totalStaked;
+    
+    function stake() public payable {
+        require(msg.value > 0, "Zero stake");
+        
+        UserInfo storage user = userInfo[msg.sender];
+        require(user.stakedAmount + msg.value >= user.stakedAmount, "Stake overflow");
+        require(totalStaked + msg.value >= totalStaked, "Total overflow");
+        
+        user.stakedAmount += msg.value;
+        user.lastUpdateTime = block.timestamp;
+        totalStaked += msg.value;
+        
+        assert(user.stakedAmount >= msg.value);
+        assert(totalStaked >= msg.value);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 47. Safe Oracle Consumer
+contract SafeOracleConsumer {
+    struct PricePoint {
+        uint256 price;
+        uint256 timestamp;
+        bool valid;
+    }
+    
+    mapping(bytes32 => PricePoint) public prices;
+    uint256 public constant MAX_PRICE_AGE = 1 hours;
+    
+    function updatePrice(bytes32 asset, uint256 price) public {
+        require(price > 0, "Invalid price");
+        
+        prices[asset] = PricePoint({
+            price: price,
+            timestamp: block.timestamp,
+            valid: true
+        });
+        
+        assert(prices[asset].valid);
+        assert(prices[asset].price == price);
+    }
+    
+    function getValidPrice(bytes32 asset) public view returns (uint256) {
+        PricePoint memory pricePoint = prices[asset];
+        require(pricePoint.valid, "No price");
+        require(block.timestamp - pricePoint.timestamp <= MAX_PRICE_AGE, "Price too old");
+        return pricePoint.price;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 48. Safe Reward Distributor
+contract SafeRewardDistributor {
+    struct RewardInfo {
+        uint256 accumulatedReward;
+        uint256 lastUpdateTime;
+        uint256 rewardPerSecond;
+    }
+    
+    mapping(address => RewardInfo) public rewardInfo;
+    
+    function updateRewardRate(address user, uint256 newRate) public {
+        require(user != address(0), "Invalid user");
+        require(newRate <= 1000 ether, "Rate too high");
+        
+        RewardInfo storage info = rewardInfo[user];
+        info.rewardPerSecond = newRate;
+        info.lastUpdateTime = block.timestamp;
+        
+        assert(info.rewardPerSecond <= 1000 ether);
+        assert(info.lastUpdateTime <= block.timestamp);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 49. Safe Vote Counter
+contract SafeVoteCounter {
+    struct Proposal {
+        uint256 yesVotes;
+        uint256 noVotes;
+        uint256 endTime;
+        bool executed;
+    }
+    
+    mapping(uint256 => Proposal) public proposals;
+    mapping(uint256 => mapping(address => bool)) public hasVoted;
+    
+    function createProposal(uint256 proposalId, uint256 duration) public {
+        require(!proposals[proposalId].executed, "Already exists");
+        require(duration >= 1 days, "Duration too short");
+        
+        uint256 endTime = block.timestamp + duration;
+        require(endTime > block.timestamp, "Time overflow");
+        
+        proposals[proposalId].endTime = endTime;
+        
+        assert(proposals[proposalId].endTime > block.timestamp);
+        assert(proposals[proposalId].yesVotes == 0);
+        assert(proposals[proposalId].noVotes == 0);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 50. Safe Token Swapper
+contract SafeTokenSwapper {
+    struct SwapRequest {
+        address initiator;
+        uint256 amount;
+        uint256 minReturn;
+        uint256 expiry;
+        bool executed;
+    }
+    
+    mapping(bytes32 => SwapRequest) public swapRequests;
+    
+    function createSwapRequest(
+        uint256 amount,
+        uint256 minReturn,
+        uint256 duration
+    ) public returns (bytes32) {
+        require(amount > 0, "Zero amount");
+        require(minReturn > 0, "Zero return");
+        require(duration > 0, "Zero duration");
+        
+        bytes32 requestId = keccak256(abi.encodePacked(
+            msg.sender,
+            amount,
+            block.timestamp
+        ));
+        
+        uint256 expiry = block.timestamp + duration;
+        require(expiry > block.timestamp, "Time overflow");
+        
+        swapRequests[requestId] = SwapRequest({
+            initiator: msg.sender,
+            amount: amount,
+            minReturn: minReturn,
+            expiry: expiry,
+            executed: false
+        });
+        
+        assert(!swapRequests[requestId].executed);
+        assert(swapRequests[requestId].initiator == msg.sender);
+        return requestId;
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 51. Safe Yield Farming
+contract SafeYieldFarming {
+    struct FarmInfo {
+        uint256 stakedAmount;
+        uint256 rewardDebt;
+        uint256 lastHarvestTime;
+        uint256 harvestLockTime;
+    }
+    
+    mapping(address => FarmInfo) public farmInfo;
+    uint256 public constant HARVEST_LOCK_DURATION = 1 days;
+    
+    function stake(uint256 amount) public {
+        require(amount > 0, "Zero stake");
+        
+        FarmInfo storage farm = farmInfo[msg.sender];
+        require(farm.stakedAmount + amount >= farm.stakedAmount, "Stake overflow");
+        
+        farm.stakedAmount += amount;
+        farm.lastHarvestTime = block.timestamp;
+        farm.harvestLockTime = block.timestamp + HARVEST_LOCK_DURATION;
+        
+        assert(farm.stakedAmount >= amount);
+        assert(farm.harvestLockTime > block.timestamp);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 52. Safe Order Book
+contract SafeOrderBook {
+    struct Order {
+        address trader;
+        uint256 amount;
+        uint256 price;
+        uint256 timestamp;
+        bool isBuyOrder;
+    }
+    
+    mapping(bytes32 => Order) public orders;
+    uint256 public constant MAX_PRICE = 1000000 ether;
+    
+    function createOrder(uint256 amount, uint256 price, bool isBuyOrder) public {
+        require(amount > 0, "Zero amount");
+        require(price > 0 && price <= MAX_PRICE, "Invalid price");
+        
+        bytes32 orderId = keccak256(abi.encodePacked(
+            msg.sender,
+            amount,
+            price,
+            block.timestamp
+        ));
+        
+        orders[orderId] = Order({
+            trader: msg.sender,
+            amount: amount,
+            price: price,
+            timestamp: block.timestamp,
+            isBuyOrder: isBuyOrder
+        });
+        
+        assert(orders[orderId].trader == msg.sender);
+        assert(orders[orderId].price <= MAX_PRICE);
+    }
+}
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+// 53. Safe Insurance Pool
+contract SafeInsurancePool {
+    struct Policy {
+        uint256 coverage;
+        uint256 premium;
+        uint256 startTime;
+        uint256 duration;
+        bool active;
+    }
+    
+    mapping(address => Policy) public policies;
+    uint256 public totalCoverage;
+    
+    function createPolicy(uint256 duration) public payable {
+        require(msg.value > 0, "Zero premium");
+        require(duration >= 30 days, "Duration too short");
+        require(!policies[msg.sender].active, "Policy exists");
+        
+        uint256 coverage = msg.value * 10; // 10x coverage
+        require(totalCoverage + coverage >= totalCoverage, "Coverage overflow");
+        
+        policies[msg.sender] = Policy({
+            coverage: coverage,
+            premium: msg.value,
+            startTime: block.timestamp,
+            duration: duration,
+            active: true
+        });
+        
+        totalCoverage += coverage;
+        
+        assert(policies[msg.sender].active);
+        assert(totalCoverage >= coverage);
+    }
+}
+
+54. SafeTokenLocker;
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeTokenLocker {
+    struct Lock {
+        uint256 amount;
+        uint256 releaseTime;
+        bool withdrawn;
+    }
+
+    mapping(address => Lock[]) public locks;
+
+    function createLock(uint256 amount, uint256 duration) public {
+        require(amount > 0, "Amount must be positive");
+        require(duration > 0, "Duration must be positive");
+        
+        uint256 releaseTime = block.timestamp + duration;
+        require(releaseTime > block.timestamp, "Invalid release time");
+
+        locks[msg.sender].push(Lock({
+            amount: amount,
+            releaseTime: releaseTime,
+            withdrawn: false
+        }));
+
+        assert(locks[msg.sender].length > 0);
+    }
+
+    function withdraw(uint256 lockIndex) public {
+        Lock storage lock = locks[msg.sender][lockIndex];
+        require(block.timestamp >= lock.releaseTime, "Lock time not reached");
+        require(!lock.withdrawn, "Already withdrawn");
+
+        lock.withdrawn = true;
+
+        (bool success, ) = msg.sender.call{value: lock.amount}("");
+        require(success, "Transfer failed");
+        assert(lock.withdrawn == true);
+    }
+}
+
+55. SafeAuctionFactory
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeAuctionFactory {
+    struct Auction {
+        uint256 highestBid;
+        address highestBidder;
+        uint256 endTime;
+        bool ended;
+    }
+
+    mapping(uint256 => Auction) public auctions;
+    uint256 public nextAuctionId;
+
+    function createAuction(uint256 duration) public {
+        require(duration >= 1 hours, "Duration too short");
+
+        uint256 endTime = block.timestamp + duration;
+        require(endTime > block.timestamp, "Invalid end time");
+
+        auctions[nextAuctionId] = Auction({
+            highestBid: 0,
+            highestBidder: address(0),
+            endTime: endTime,
+            ended: false
+        });
+        nextAuctionId++;
+
+        assert(auctions[nextAuctionId - 1].endTime > block.timestamp);
+    }
+
+    function bid(uint256 auctionId) public payable {
+        Auction storage auction = auctions[auctionId];
+        require(block.timestamp < auction.endTime, "Auction expired");
+        require(!auction.ended, "Auction ended");
+        require(msg.value > auction.highestBid, "Bid too low");
+
+        if (auction.highestBidder != address(0)) {
+            payable(auction.highestBidder).transfer(auction.highestBid);
+        }
+
+        auction.highestBid = msg.value;
+        auction.highestBidder = msg.sender;
+
+        assert(auction.highestBidder == msg.sender);
+    }
+}
+
+56. SafeGovernanceVoting
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeGovernanceVoting {
+    mapping(address => bool) public hasVoted;
+    uint256 public yesVotes;
+    uint256 public noVotes;
+    uint256 public endTime;
+    bool public votingEnded;
+
+    constructor(uint256 duration) {
+        endTime = block.timestamp + duration;
+    }
+
+    function vote(bool support) public {
+        require(block.timestamp <= endTime, "Voting ended");
+        require(!hasVoted[msg.sender], "Already voted");
+
+        hasVoted[msg.sender] = true;
+        if (support) {
+            yesVotes++;
+        } else {
+            noVotes++;
+        }
+
+        assert(hasVoted[msg.sender] == true);
+    }
+
+    function endVoting() public {
+        require(block.timestamp > endTime, "Voting period ongoing");
+        require(!votingEnded, "Already ended");
+
+        votingEnded = true;
+        assert(votingEnded == true);
+    }
+}
+
+57. SafeCrowdsale
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeCrowdsale {
+    uint256 public maxContribution;
+    uint256 public minContribution;
+    mapping(address => uint256) public contributions;
+    uint256 public totalContributions;
+
+    constructor(uint256 _min, uint256 _max) {
+        minContribution = _min;
+        maxContribution = _max;
+    }
+
+    function contribute() public payable {
+        require(msg.value >= minContribution, "Contribution too low");
+        require(msg.value <= maxContribution, "Contribution too high");
+        require(contributions[msg.sender] + msg.value <= maxContribution, "Total too high");
+
+        contributions[msg.sender] += msg.value;
+        totalContributions += msg.value;
+
+        assert(totalContributions >= msg.value);
+    }
+}
+
+58. SafeDividendDistributor
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeDividendDistributor {
+    mapping(address => uint256) public shares;
+    uint256 public totalShares;
+
+    function addShareholder(address shareholder, uint256 amount) public {
+        require(amount > 0, "Amount must be positive");
+        require(shares[shareholder] == 0, "Already a shareholder");
+
+        shares[shareholder] = amount;
+        totalShares += amount;
+
+        assert(totalShares >= amount);
+    }
+
+    function distributeDividends() public payable {
+        require(totalShares > 0, "No shares");
+
+        for (address shareholder : shareholders) {
+            uint256 amount = msg.value * shares[shareholder] / totalShares;
+            payable(shareholder).transfer(amount);
+            assert(msg.value >= amount);
+        }
+    }
+}
+
+59. SafeCrowdfunding
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeCrowdfunding {
+    mapping(address => uint256) public contributions;
+    uint256 public targetAmount;
+    uint256 public deadline;
+    bool public funded;
+
+    constructor(uint256 _targetAmount, uint256 _duration) {
+        require(_targetAmount > 0, "Target must be positive");
+        targetAmount = _targetAmount;
+        deadline = block.timestamp + _duration;
+    }
+
+    function contribute() public payable {
+        require(block.timestamp < deadline, "Deadline passed");
+        require(!funded, "Target already reached");
+
+        contributions[msg.sender] += msg.value;
+        assert(contributions[msg.sender] >= msg.value);
+    }
+
+    function finalize() public {
+        require(block.timestamp >= deadline, "Deadline not reached");
+        require(!funded, "Already funded");
+
+        if (address(this).balance >= targetAmount) {
+            funded = true;
+            assert(funded == true);
+        }
+    }
+}
+
+60. SafeLoanManager
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeLoanManager {
+    mapping(address => uint256) public loans;
+    uint256 public interestRate;
+
+    constructor(uint256 _interestRate) {
+        require(_interestRate > 0, "Interest rate must be positive");
+        interestRate = _interestRate;
+    }
+
+    function takeLoan(uint256 amount) public {
+        require(amount > 0, "Loan amount must be positive");
+        loans[msg.sender] += amount;
+        assert(loans[msg.sender] >= amount);
+    }
+
+    function repayLoan(uint256 amount) public {
+        require(loans[msg.sender] >= amount, "Overpayment");
+
+        loans[msg.sender] -= amount;
+        assert(loans[msg.sender] <= amount);
+    }
+}
+
+61. SafeSalaryPayout
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeSalaryPayout {
+    mapping(address => uint256) public salaries;
+
+    function setSalary(address employee, uint256 amount) public {
+        require(employee != address(0), "Invalid address");
+        require(amount > 0, "Salary must be positive");
+
+        salaries[employee] = amount;
+        assert(salaries[employee] == amount);
+    }
+
+    function paySalary(address employee) public {
+        require(salaries[employee] > 0, "No salary set");
+        (bool success, ) = employee.call{value: salaries[employee]}("");
+        require(success, "Payment failed");
+    }
+}
+
+62. SafeEmergencyFund
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeEmergencyFund {
+    mapping(address => uint256) public deposits;
+
+    function deposit() public payable {
+        require(msg.value > 0, "Must send ETH");
+        deposits[msg.sender] += msg.value;
+        assert(deposits[msg.sender] >= msg.value);
+    }
+
+    function withdraw(uint256 amount) public {
+        require(deposits[msg.sender] >= amount, "Insufficient balance");
+        deposits[msg.sender] -= amount;
+
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Withdraw failed");
+    }
+}
+
+63. SafeSharedWallet
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeSharedWallet {
+    mapping(address => uint256) public allowances;
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function setAllowance(address user, uint256 amount) public {
+        require(msg.sender == owner, "Only owner");
+        allowances[user] = amount;
+        assert(allowances[user] == amount);
+    }
+
+    function withdraw(uint256 amount) public {
+        require(allowances[msg.sender] >= amount, "Exceeds allowance");
+
+        allowances[msg.sender] -= amount;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+    }
+}
+
+64. SafeMultiOwnerWallet
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeMultiOwnerWallet {
+    mapping(address => bool) public owners;
+    uint256 public ownerCount;
+    uint256 public minApprovals;
+
+    modifier onlyOwner() {
+        require(owners[msg.sender], "Not an owner");
+        _;
+    }
+
+    constructor(address[] memory _owners, uint256 _minApprovals) {
+        require(_minApprovals > 0, "Min approvals must be positive");
+        require(_owners.length >= _minApprovals, "Insufficient owners");
+
+        for (uint256 i = 0; i < _owners.length; i++) {
+            owners[_owners[i]] = true;
+            ownerCount++;
+        }
+
+        minApprovals = _minApprovals;
+    }
+}
+
+65. SafeTrustFund
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeTrustFund {
+    address public trustee;
+    address public beneficiary;
+    uint256 public releaseTime;
+
+    constructor(address _beneficiary, uint256 _releaseTime) {
+        require(_beneficiary != address(0), "Invalid beneficiary");
+        require(_releaseTime > block.timestamp, "Invalid release time");
+
+        trustee = msg.sender;
+        beneficiary = _beneficiary;
+        releaseTime = _releaseTime;
+    }
+
+    function releaseFunds() public {
+        require(msg.sender == trustee, "Not trustee");
+        require(block.timestamp >= releaseTime, "Too early");
+
+        (bool success, ) = beneficiary.call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+    }
+}
+
+66. SafeCharityDonation
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeCharityDonation {
+    mapping(address => uint256) public donations;
+
+    function donate() public payable {
+        require(msg.value > 0, "Must send ETH");
+        donations[msg.sender] += msg.value;
+        assert(donations[msg.sender] >= msg.value);
+    }
+
+    function withdrawDonation(uint256 amount) public {
+        require(donations[msg.sender] >= amount, "Exceeds donation");
+
+        donations[msg.sender] -= amount;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Withdraw failed");
+    }
+}
+
+67. SafeBusinessEscrow
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeBusinessEscrow {
+    address public buyer;
+    address public seller;
+    uint256 public amount;
+
+    function setupEscrow(address _buyer, address _seller, uint256 _amount) public {
+        require(_buyer != address(0) && _seller != address(0), "Invalid parties");
+        require(_amount > 0, "Amount must be positive");
+
+        buyer = _buyer;
+        seller = _seller;
+        amount = _amount;
+    }
+
+    function releasePayment() public {
+        require(msg.sender == buyer, "Only buyer");
+        (bool success, ) = seller.call{value: amount}("");
+        require(success, "Payment failed");
+    }
+}
+
+68. SafeVotingPowerAllocation
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeVotingPowerAllocation {
+    mapping(address => uint256) public votingPower;
+    uint256 public totalVotingPower;
+
+    function delegateVotingPower(address to, uint256 amount) public {
+        require(to != address(0), "Invalid delegate");
+        require(votingPower[msg.sender] >= amount, "Insufficient power");
+
+        votingPower[msg.sender] -= amount;
+        votingPower[to] += amount;
+
+        assert(votingPower[to] >= amount);
+    }
+}
+
+69. SafeContractInsurance
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeContractInsurance {
+    mapping(address => uint256) public insuredAmount;
+    uint256 public totalInsured;
+
+    function insure(uint256 amount) public payable {
+        require(msg.value == amount, "Incorrect amount");
+        insuredAmount[msg.sender] += amount;
+        totalInsured += amount;
+
+        assert(totalInsured >= amount);
+    }
+}
+
+70. SafeMultiTokenLocker
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SafeMultiTokenLocker {
+    struct Lock {
+        uint256 amount;
+        uint256 releaseTime;
+    }
+
+    mapping(address => Lock[]) public locks;
+
+    function createLock(uint256 amount, uint256 duration) public {
+        require(amount > 0, "Amount must be positive");
+        require(duration > 0, "Invalid duration");
+
+        locks[msg.sender].push(Lock({
+            amount: amount,
+            releaseTime: block.timestamp + duration
+        }));
+
+        assert(locks[msg.sender].length > 0);
+    }
+}
+
+
+Bad Contracts (1-30)
+
+1. OverflowingTokenMint
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract OverflowingTokenMint {
+    uint256 public totalSupply;
+
+    function mint(uint256 amount) public {
+        require(amount > 0, "Amount must be positive");
+        totalSupply += amount; // No overflow check
+        assert(totalSupply >= amount);
+    }
+}
+
+2. UnsafeWithdrawal
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnsafeWithdrawal {
+    mapping(address => uint256) public balances;
+
+    function withdraw(uint256 amount) public {
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        (bool success, ) = msg.sender.call{value: amount}(""); // Vulnerable to reentrancy
+        require(success, "Withdraw failed");
+        balances[msg.sender] -= amount;
+        assert(balances[msg.sender] >= 0);
+    }
+}
+
+3. UnlimitedApproval
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnlimitedApproval {
+    mapping(address => uint256) public allowances;
+
+    function approve(uint256 amount) public {
+        allowances[msg.sender] = amount; // No upper limit check
+        assert(allowances[msg.sender] == amount);
+    }
+}
+
+4. OpenAccessFunds
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract OpenAccessFunds {
+    function withdrawAll() public {
+        (bool success, ) = msg.sender.call{value: address(this).balance}(""); // No access control
+        require(success, "Withdraw failed");
+        assert(address(this).balance == 0);
+    }
+}
+5. UncheckedArrayAccess
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UncheckedArrayAccess {
+    uint256[] public data;
+
+    function getData(uint256 index) public view returns (uint256) {
+        require(index >= 0, "Index out of bounds"); // Fails to check array length
+        assert(data.length > 0);
+        return data[index];
+    }
+}
+6. UnsafeDivision
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnsafeDivision {
+    function divide(uint256 a, uint256 b) public pure returns (uint256) {
+        require(b != 0, "Division by zero"); // Only checking zero, may still be vulnerable
+        uint256 result = a / b;
+        assert(result >= 0);
+        return result;
+    }
+}
+7. ImproperAdminControl
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract ImproperAdminControl {
+    address public admin;
+
+    function setAdmin(address newAdmin) public {
+        require(newAdmin != address(0), "Invalid admin");
+        admin = newAdmin; // No restrictions on who can call this
+        assert(admin == newAdmin);
+    }
+}
+8. LaxTimeLock
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract LaxTimeLock {
+    uint256 public unlockTime;
+
+    function setUnlockTime(uint256 time) public {
+        require(time > block.timestamp, "Invalid unlock time");
+        unlockTime = time; // No owner check
+        assert(unlockTime == time);
+    }
+}
+9. InsecureTransfer
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract InsecureTransfer {
+    function transfer(address payable to, uint256 amount) public {
+        require(to != address(0), "Invalid recipient");
+        to.transfer(amount); // No balance check
+        assert(to.balance >= amount);
+    }
+}
+10. OpenStateChange
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract OpenStateChange {
+    uint256 public state;
+
+    function changeState(uint256 newState) public {
+        state = newState; // No access control
+        assert(state == newState);
+    }
+}
+11. InsecureRoleManager
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract InsecureRoleManager {
+    mapping(address => bool) public isAdmin;
+
+    function addAdmin(address admin) public {
+        require(admin != address(0), "Invalid admin");
+        isAdmin[admin] = true; // No owner check
+        assert(isAdmin[admin] == true);
+    }
+}
+12. UnverifiedTokenBurn
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnverifiedTokenBurn {
+    mapping(address => uint256) public balances;
+
+    function burn(uint256 amount) public {
+        balances[msg.sender] -= amount; // No require for sufficient balance
+        assert(balances[msg.sender] >= 0);
+    }
+}
+13. WeakOwnership
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract WeakOwnership {
+    address public owner;
+
+    function transferOwnership(address newOwner) public {
+        owner = newOwner; // No restrictions on who can transfer ownership
+        assert(owner == newOwner);
+    }
+}
+14. UnrestrictedStake
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnrestrictedStake {
+    function stake() public payable {
+        require(msg.value > 0, "Must stake something");
+        // Missing logic for recording stake
+        assert(msg.value > 0);
+    }
+}
+15. ExposedInternalCall
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract ExposedInternalCall {
+    function internalFunction() public {
+        // Exposes sensitive internal logic to the public
+        assert(true);
+    }
+}
+16. UnlimitedTokenIssue
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnlimitedTokenIssue {
+    mapping(address => uint256) public balances;
+
+    function mint(uint256 amount) public {
+        balances[msg.sender] += amount; // No overflow check
+        assert(balances[msg.sender] >= amount);
+    }
+}
+17. NoRequireOwnership
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract NoRequireOwnership {
+    address public owner;
+
+    function onlyOwner() public view returns (bool) {
+        require(owner != address(0), "No owner"); // Doesn't verify caller is owner
+        assert(true);
+        return true;
+    }
+}
+18. UncheckedMinting
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UncheckedMinting {
+    uint256 public totalSupply;
+
+    function mint(uint256 amount) public {
+        totalSupply += amount; // No overflow or access check
+        assert(totalSupply >= amount);
+    }
+}
+19. PublicWithdrawFunction
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract PublicWithdrawFunction {
+    function withdrawAll() public {
+        (bool success, ) = msg.sender.call{value: address(this).balance}(""); // No ownership check
+        require(success, "Withdraw failed");
+        assert(address(this).balance == 0);
+    }
+}
+20. InvalidApprovalLimit
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract InvalidApprovalLimit {
+    mapping(address => uint256) public allowances;
+
+    function approve(uint256 amount) public {
+        allowances[msg.sender] = amount; // No maximum limit check
+        assert(allowances[msg.sender] == amount);
+    }
+}
+21. UnauthorizedEscrowSetup
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnauthorizedEscrowSetup {
+    address public buyer;
+    address public seller;
+
+    function setupEscrow(address _buyer, address _seller) public {
+        require(_buyer != address(0) && _seller != address(0), "Invalid parties");
+        buyer = _buyer;
+        seller = _seller; // Anyone can set these parties
+        assert(buyer == _buyer);
+        assert(seller == _seller);
+    }
+}
+22. LaxVotingSystem
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract LaxVotingSystem {
+    mapping(address => bool) public hasVoted;
+
+    function vote() public {
+        hasVoted[msg.sender] = true; // No check for previous voting
+        assert(hasVoted[msg.sender] == true);
+    }
+}
+23. NoBalanceCheckTransfer
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract NoBalanceCheckTransfer {
+    function transfer(address payable to, uint256 amount) public {
+        to.transfer(amount); // Lacks balance check
+        assert(true);
+    }
+}
+
+24. InfiniteLoopError
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract InfiniteLoopError {
+    uint256[] public items;
+
+    function addItems(uint256 count) public {
+        require(count > 0, "Count must be positive");
+        
+        // This loop may lead to out-of-gas errors with no proper termination check
+        for (uint256 i = 0; i < count; i++) {
+            items.push(i);
+        }
+
+        assert(items.length == count); // Incorrect assertion may lead to unexpected states
+    }
+}
+25. UnvalidatedBidPlacement
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnvalidatedBidPlacement {
+    address public highestBidder;
+    uint256 public highestBid;
+
+    function placeBid() public payable {
+        require(msg.value > 0, "Bid must be positive");
+        
+        // No check to ensure new bid is higher than the current highest bid
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+
+        assert(highestBidder == msg.sender); // Incorrect assertion without validation
+    }
+}
+26. WeakBalanceUpdate
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract WeakBalanceUpdate {
+    mapping(address => uint256) public balances;
+
+    function updateBalance(uint256 amount) public {
+        // Fails to check for overflows or update logic
+        balances[msg.sender] += amount;
+        assert(balances[msg.sender] >= amount);
+    }
+}
+27. UncheckedBatchTransfer
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UncheckedBatchTransfer {
+    mapping(address => uint256) public balances;
+
+    function batchTransfer(address[] memory recipients, uint256 amount) public {
+        require(recipients.length > 0, "No recipients");
+        
+        // No balance check for each transfer, may cause underflows or reentrancy issues
+        for (uint256 i = 0; i < recipients.length; i++) {
+            balances[recipients[i]] += amount;
+        }
+        
+        assert(balances[recipients[0]] >= amount);
+    }
+}
+28. FreeTokenBurn
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract FreeTokenBurn {
+    mapping(address => uint256) public balances;
+
+    function burnTokens(uint256 amount) public {
+        // Missing check for sufficient balance, allowing unintended burns
+        balances[msg.sender] -= amount;
+        assert(balances[msg.sender] <= amount);
+    }
+}
+29. UnverifiedRewardDistribution
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract UnverifiedRewardDistribution {
+    mapping(address => uint256) public rewards;
+
+    function distributeReward(address recipient, uint256 rewardAmount) public {
+        // No check for overflow, may lead to erroneous rewards
+        rewards[recipient] += rewardAmount;
+        assert(rewards[recipient] >= rewardAmount);
+    }
+}
+30. ImproperTimeLockControl
+solidity
+Copy code
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract ImproperTimeLockControl {
+    uint256 public lockTime;
+
+    function setLockTime(uint256 newLockTime) public {
+        // No check for caller authority, allows anyone to reset lock time
+        require(newLockTime > block.timestamp, "Lock time must be in the future");
+        lockTime = newLockTime;
+        assert(lockTime == newLockTime);
+    }
+}
+
